@@ -1,4 +1,16 @@
-#Primary Installation
+#Cyclistic Bike Share - A GOOGLE case study
+
+#Using R to :
+#• Clean and manipulate our data.
+#• Partly analysising data using R 
+#• Preparing a csv file to use in Tableau
+
+# Data for Cyclistic Nov 2021 to Oct 2022
+# Data Source : https://divvy-tripdata.s3.amazonaws.com/index.html
+# All the data sets have been downloaded and named in chronological order.
+# Nov 21 has been named BR1 and so on till Oct 22 as BR12 in designated Folder
+
+#Primary Installation of Packages
 install.packages("tidyverse")
 install.packages("lubridate") #For date manipulation
 install.packages("janitor") #For basic cleaning process
@@ -17,10 +29,8 @@ library(modeest) #to use mlv() for mode
 library(geosphere)  #to use distm()
 
 
-# Data for Cyclistic Nov 2021 to Oct 2022
-# Data Source : https://divvy-tripdata.s3.amazonaws.com/index.html
-# All the data sets have been downloaded and named in chronological order.
-# Nov 21 has been named BR1 and so on till Oct 22 as BR12 in designated Folder
+
+#-------------------DATA PROCESSING AND CLEANING-------------------#
 
 
 #Reading all files into variables
@@ -40,7 +50,6 @@ BR12 <- read_csv("BR12.csv")
 #Test to see if all files have loaded correctly and display the correct information
 #Replace file name to check all the file names and their accuracy
 
-
 #USING rbind() function to stitch all the data sets together
 BR_stitch <- rbind(BR1,BR2,BR3,BR4,BR5,BR6,BR7,BR8,BR9,BR10,BR11,BR12)
 
@@ -48,6 +57,7 @@ BR_stitch <- rbind(BR1,BR2,BR3,BR4,BR5,BR6,BR7,BR8,BR9,BR10,BR11,BR12)
 remove(BR1,BR2,BR3,BR4,BR5,BR6,BR7,BR8,BR9,BR10,BR11,BR12)
 
 head(BR_stitch)
+colnames(BR)
 
 
 #Cleaning Empty Rows and Columns 
@@ -60,58 +70,66 @@ BR <- remove_empty(BR_stitch, which = c("rows","cols"),quiet = FALSE)
 remove(BR_stitch)
 
 
-##Resetting Environment to recheck all code. Remove Comments ## to use
-##remove(list=ls())
 
 
-##DATA MANIPULATION FOR ANALYSIS
 
-##Finding Renting date from dataframe. Extracting only date from date and time
+#-------------------DATA MANIPULATION FOR ANALYSIS-------------------#
+
+#Finding Renting date from dataframe. Extracting only date from date and time
 BR$date <- as.Date(BR$started_at)
 
-##Adding Column day to find out the day of the week when rented
-##df$day <- weekdays(as.Date(df$date))
+#Adding Column day to find out the day of the week when rented
 BR$day <- weekdays(as.Date(BR$date))
 
-##Changing dates and time to a standard YMD HMS format
+#Changing dates and time to a standard YMD HMS format
 BR$started_at <- ymd_hms(BR$started_at)
 BR$ended_at <- ymd_hms(BR$ended_at)
 
-##Adding Column for Ride Time
+#Adding Column for Ride Time
 BR$ride_time <- as_hms(difftime( BR$ended_at,BR$started_at))
 
 
-
-##Adding Column for Ride Distance
-##BR$ride_distance=distm(c(BR$start_lng,BR$start_lat), c(BR$end_lng,BR$end_lat), fun = distHaversine)
-##BR %>% rowwise() %>% mutate(ride_distance = geosphere::distHaversine( c(start_lng, start_lat), c(end_lng, end_lat)))
-
-
-
-##Final Check to see everything is in order
+#Final Check to see everything is in order
 View(BR)
 
 
-##Saving our Stitched,Cleaned and Manipulated data in a .csv file 
+#-------------------SAVING CSV FOR TABLEAU-------------------#
+
+#Saving our Stitched,Cleaned and Manipulated data in a .csv file 
 write_csv(BR,file="Bike_rides_final.csv", append = TRUE, col_names = TRUE)
 
 
-##ANALYSING OUR DATA for patterns
 
-##Finding out the average Ride time
-mean(times(BR$ride_time),na.rm = TRUE)
-##00:16:20
 
-##Max Ride time
+#-------------------PRIMARY ANALYSIS-------------------#
+
+
+#Total number of rides
+NROW(BR$ride_id)
+#5755694
+
+#Membertype
+BR %>% group_by(member_casual) %>% count(member_casual)
+#1 casual        2353033
+#2 member        3402661
+
+
+#Max Ride time
 max(times(BR$ride_time),na.rm = TRUE)
-##23:59:57
+#23:59:57
+
+
+#Finding out the average Ride time
+mean(times(BR$ride_time),na.rm = TRUE)
+#00:16:20
+
+
+#Average Ride Time per Member-type
+BR %>% group_by(member_casual) %>% summarise_at(vars(ride_time),list(time = mean))
+#1 casual        1750.2063 secs     29.17 mins
+#2 member         762.6631 secs     12.71 mins
 
 
 ##Finding out most popular Day for Renting
 mlv(BR$day, method = "mlv")
 ##"Saturday"
-
-
-
-
-
