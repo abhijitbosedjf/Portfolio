@@ -171,7 +171,7 @@ WHI = WHI %>% drop_na(`Happiness Score`)
 #Kept quiet = FALSE so printed message can be shown to see how many rows/cols got deleted
 
 
-#-------------------SAVING CSV FOR TABLEAU-------------------#
+#-------------------SAVING CSV FOR USE IN TABLEAU-------------------#
 
 #Saving our Stitched,Cleaned and Manipulated data in a .csv file 
 write_csv(WHI,file="Worldfile.csv", append =FALSE, col_names = TRUE)
